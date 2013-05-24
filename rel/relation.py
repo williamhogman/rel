@@ -156,19 +156,20 @@ class Relation(object):
 
     def join(self, other):
         disjoint = self.attributes != other.attributes and all(a not in other.attributes for a in self.attributes)
-
-        # The new relation will have the union of the two relation's attributes
-        attributes = self.attributes | other.attributes
-
         if disjoint:
-            tuples = (a.union(b) for (a, b) in itertools.product(self.tuples, other.tuples))
-            return Relation(attributes, tuples)
+            return self.product(other
         else:
+            # The new relation will have the union of the two relation's attributes
+            attributes = self.attributes | other.attributes
             common = self.attributes & other.attributes
             tuples = self._join_tuples_on(self.tuples, other.tuples, common)
             return Relation(attributes, tuples)
 
-                
+
+    def product(self, other):
+        attr = self.attributes | other.attributes
+        body = (a.union(b) for (a, b) in itertools.product(self.tuples, other.tuples))
+        return Relation(attr, body)
 
     def _is_candidate_key(self, key):
 
@@ -208,7 +209,7 @@ class Relation(object):
 
     pi = project
     sigma = select
-
+    rho = rename
         
 
 # We call the empty tuple et for readability
