@@ -40,7 +40,6 @@ class Attribute(object):
             return self
         else:
             return Attribute(self._type, to)
-
     def __eq__(self, other):
         return isinstance(other, Attribute) and self._type == other._type and self._name == other._name
 
@@ -104,14 +103,17 @@ class Relation(object):
     def __repr__(self):
         # The two zero-order relations doe and dee are special cases
         if self.order == 0:
-            # Doe if the cardinality is one otherwise dee
-            return "Doe" if self.cardinality == 1 else "Dee"
+            # Dee if the cardinality is one
+            return "Dee" if self.cardinality == 1 else "Doe"
         else:
             return "Relation({0}, {1})".format(repr(self.attributes), repr(self._tuples))
 
     def project(self, attribute_names):
         if len(attribute_names) == 0:
-            return Dee # not sure about this
+            if self.cardinality == 0:
+                return Doe
+            else:
+                return Dee
 
         nt = set(t.project(attribute_names) for t in self._tuples)
         attr = set(self.attribute(name) for name in attribute_names)
@@ -157,7 +159,7 @@ class Relation(object):
     def join(self, other):
         disjoint = self.attributes != other.attributes and all(a not in other.attributes for a in self.attributes)
         if disjoint:
-            return self.product(other
+            return self.product(other)
         else:
             # The new relation will have the union of the two relation's attributes
             attributes = self.attributes | other.attributes
@@ -206,6 +208,11 @@ class Relation(object):
     def __len__(self):
         return self.cardinality
 
+    def __eq__(self, other):
+        return (
+            self.attributes == other.attributes and
+            self.tuples == other.tuples
+        )
 
     pi = project
     sigma = select
