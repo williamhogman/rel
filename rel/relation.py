@@ -226,10 +226,7 @@ class Relation(_BaseRelation):
             return "Relation({0}, {1})".format(repr(self.attributes), repr(self._tuples))
 
     def attributes_disjoint(self, other):
-        return (
-            self.attributes != other.attributes and
-            all(a not in other.attributes for a in self.attributes)
-        )
+        return self.attributes.disjoint(other.attributes)
 
     def _join_tuples_naturally_on(self, other, on):
         tuples = self.tuples
