@@ -323,29 +323,52 @@ class Relation(_BaseRelation):
             tuples = self._join_tuples_on(self.tuples, other.tuples, common)
             return Relation(attributes, tuples)
 
-    def _is_candidate_key(self, key):
+    def _is_super_key(self, key):
 
         if isinstance(key, str):
             key = (key, )
-
         # If the cardinality of the entire relation is the same as
         # the cardinality of the projection of the relation onto the
-        # key components are equal then the key is a candidate key.
+        # key components are equal then the key is a super key.
         orig = len(self._tuples)
         
-        return len(self.projection(key)) == orig
+        return len(self.project(key)) == orig
+
+    @property
+    def _attributes_powerset(self):
+        s = list(self.attribute_names)
+        return itertools.chain.from_iterable(itertools.combinations(s, r) 
+                                             for r in range(len(s)+1))
+
+    @property
+    def super_keys(self):
+        names = set(self.attribute_names)
+
+        # The full collection of attributes is always a super key
+        yield names
+
+        for key in self._attributes_powerset:
+            if self._is_super_key(key):
+                yield set(key)
 
     @property
     def candidate_keys(self):
-        names = tuple(self.attribute_names)
+        sk = list(self.super_keys)
 
-        # The full collection of attributes is always a candidate key
-        yield names
+        # If the set of super-keys is smaller than 2. That is a
+        # relation of either the 0th or 1st order.
 
-        for i in range(1, self.order):
-            for key in itertools.combinations(names, i):
-                if self._is_candidate_key(key):
-                    yield key
+        if len(sk) <= 1:
+            return sk
+        
+        # A super-key is a candidate key unless there exists another
+        # super-key, k2, such that the attributes of key are proper
+        # subset of k2. That is to say something is not a candidate
+        # key if you can use some but not all of its attributes to
+        # create a super-key.
+        return [k for k in sk 
+                if not any(k2 < k for k2 in sk)]
+
 
 # We call the empty tuple et for readability
 _et = tuple()
